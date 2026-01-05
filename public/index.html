@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>wow - Mensajería</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            wow: {
+              50: 'rgb(var(--wow-50) / <alpha-value>)',
+              100: 'rgb(var(--wow-100) / <alpha-value>)',
+              200: 'rgb(var(--wow-200) / <alpha-value>)',
+              300: 'rgb(var(--wow-300) / <alpha-value>)',
+              400: 'rgb(var(--wow-400) / <alpha-value>)',
+              500: 'rgb(var(--wow-500) / <alpha-value>)',
+              600: 'rgb(var(--wow-600) / <alpha-value>)',
+              900: 'rgb(var(--wow-900) / <alpha-value>)',
+            },
+            dark: {
+              bg: '#020617',
+              card: '#0f172a',
+              text: '#f8fafc',
+              muted: '#94a3b8'
+            }
+          },
+          animation: {
+            'pop': 'pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            'slide-up-subtle': 'slideUpSubtle 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+            'fade-in': 'fadeIn 0.3s ease-out forwards',
+            'heart-beat': 'heartBeat 0.45s cubic-bezier(0.2, 0.9, 0.2, 1)',
+            'pulse-ring': 'pulseRing 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite',
+          },
+          keyframes: {
+            pop: { '0%': { transform: 'scale(0.5)', opacity: '0' }, '80%': { transform: 'scale(1.1)' }, '100%': { transform: 'scale(1)', opacity: '1' } },
+            slideUpSubtle: { '0%': { opacity: '0', transform: 'translateY(10px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+            fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
+            heartBeat: {
+              '0%': { transform: 'scale(0.7)', opacity: '0' },
+              '60%': { transform: 'scale(1.25)', opacity: '1' },
+              '100%': { transform: 'scale(1)', opacity: '1' }
+            },
+            pulseRing: {
+                '0%': { transform: 'scale(0.8)', opacity: '0.5' },
+                '100%': { transform: 'scale(2)', opacity: '0' }
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- CSS Local -->
+  <link rel="stylesheet" type="text/css" href="assets/styles.css?v=1.1">
+</head>
+<body>
+  <div id="app-container">
+
+    <!-- TOAST -->
+    <div id="toast" class="toast-notification">
+        <i id="toast-icon" data-lucide="info" class="w-5 h-5 text-white"></i>
+        <span id="toast-msg">Notificación</span>
+    </div>
+
+    <!-- BAN ALERT -->
+    <div id="ban-alert-popup" class="ban-alert">
+        <div class="w-7 h-7 bg-white/20 rounded-full flex items-center justify-center shrink-0"><i data-lucide="octagon-alert" class="w-4 h-4 text-white"></i></div>
+        <span class="leading-tight">Tu cuenta ha sido suspendida, contacta con administración para más ayuda.</span>
+    </div>
+
+    <!-- VIEW: LOGIN & REGISTER -->
+    <div id="login-view" class="absolute inset-0 z-[100] bg-white dark:bg-slate-950 flex flex-col items-center justify-center p-8 transition-opacity duration-500 overflow-hidden" style="background-color: var(--bg);">
+      <div class="mb-8 text-center">
+        <h1 class="text-6xl font-extrabold tracking-tighter text-wow-500 mb-2 drop-shadow-sm">wow</h1>
+        <p class="text-muted font-medium">Conecta instantáneamente.</p>
+      </div>
+
+      <!-- Login Form -->
+      <div id="login-form" class="w-full space-y-4 max-w-xs visible-form form-container">
+        <input type="text" id="login-username" placeholder="Usuario" class="w-full p-4 rounded-2xl bg-bar border border-transparent focus:border-wow-500 outline-none transition-all text-lg text-main placeholder-slate-400 shadow-sm" style="background-color: var(--bar); color: var(--text-main);">
+        <input type="password" id="login-password" placeholder="Contraseña" class="w-full p-4 rounded-2xl bg-bar border border-transparent focus:border-wow-500 outline-none transition-all text-lg text-main placeholder-slate-400 shadow-sm" style="background-color: var(--bar); color: var(--text-main);" onkeypress="handleLoginKey(event)">
+        <button onclick="login()" class="w-full py-4 bg-wow-500 hover:bg-wow-600 text-white font-bold rounded-2xl shadow-lg shadow-wow-500/30 active:scale-95 transition-all text-lg mt-4">Iniciar Sesión</button>
+
+        <div class="text-center mt-6">
+            <button onclick="toggleRegisterView(true)" class="text-wow-500 font-bold text-sm hover:underline">¿No tienes cuenta? Crear una</button>
+        </div>
+        <p id="login-error" class="text-red-500 text-sm text-center font-bold h-5 mt-2"></p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="register-form" class="w-full space-y-4 max-w-xs hidden-form form-container">
+        <input type="text" id="reg-name" placeholder="Tu Nombre" class="w-full p-4 rounded-2xl bg-bar border border-transparent focus:border-wow-500 outline-none transition-all text-lg text-main placeholder-slate-400 shadow-sm" style="background-color: var(--bar); color: var(--text-main);">
+        <div class="relative">
+            <span class="absolute left-4 top-4 text-muted text-lg z-10">@</span>
+            <input type="text" id="reg-username" placeholder="Usuario" class="w-full p-4 pl-9 rounded-2xl bg-bar border border-transparent focus:border-wow-500 outline-none transition-all text-lg text-main placeholder-slate-400 shadow-sm" style="background-color: var(--bar); color: var(--text-main);">
+        </div>
+        <input type="password" id="reg-password" placeholder="Contraseña" class="w-full p-4 rounded-2xl bg-bar border border-transparent focus:border-wow-500 outline-none transition-all text-lg text-main placeholder-slate-400 shadow-sm" style="background-color: var(--bar); color: var(--text-main);">
+
+        <button onclick="register()" class="w-full py-4 bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-all text-lg mt-4">Crear Cuenta</button>
+
+        <div class="text-center mt-6">
+            <button onclick="toggleRegisterView(false)" class="text-muted font-bold text-sm hover:text-main">Volver al inicio de sesión</button>
+        </div>
+        <p id="reg-error" class="text-red-500 text-sm text-center font-bold h-5 mt-2"></p>
+      </div>
+    </div>
+
+    <!-- HOME (Chats) -->
+    <div id="tab-chats" class="tab-view tab-active">
+      <header class="glass sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-theme shadow-sm dark:shadow-none backdrop-blur-md">
+        <h1 class="text-3xl font-extrabold tracking-tighter text-wow-600 dark:text-wow-400 cursor-pointer select-none transition-theme drop-shadow-sm">wow</h1>
+        <div class="flex gap-3">
+          <button onclick="switchTab('people')" class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-theme active:scale-90 text-muted shadow-sm border border-theme"><i data-lucide="search" class="w-5 h-5"></i></button>
+          <button class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100/50 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-700 transition-theme active:scale-90 text-muted shadow-sm border border-theme"><i data-lucide="more-vertical" class="w-5 h-5"></i></button>
+        </div>
+      </header>
+      <div id="chat-list" class="flex-1 overflow-y-auto no-scrollbar pb-32 pt-2"></div>
+      <div class="fab-button animate-pop" onclick="switchTab('people')"><i data-lucide="message-square-plus" class="w-6 h-6"></i></div>
+    </div>
+
+    <!-- STORIES (Nuevo Tab) -->
+    <div id="tab-stories" class="tab-view">
+        <header class="glass sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-theme shadow-sm dark:shadow-none">
+            <h1 class="text-2xl font-bold text-main transition-theme">Historias</h1>
+            <button onclick="openCreateStory()" class="w-10 h-10 rounded-full flex items-center justify-center bg-wow-50 dark:bg-slate-800 text-wow-500 hover:bg-wow-100 transition-theme btn-glow border border-transparent dark:border-slate-700"><i data-lucide="plus" class="w-5 h-5"></i></button>
+        </header>
+        <div id="stories-list" class="flex-1 overflow-y-auto p-4 pb-32 no-scrollbar">
+            <!-- Feed de historias -->
+             <div class="text-center mt-20 text-muted"><p>No hay historias recientes.</p></div>
+        </div>
+    </div>
+
+    <!-- LLAMADAS -->
+    <div id="tab-calls" class="tab-view">
+      <header class="glass sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-theme shadow-sm dark:shadow-none">
+        <h1 class="text-2xl font-bold text-main transition-theme">Llamadas</h1>
+        <button class="w-10 h-10 rounded-full flex items-center justify-center bg-wow-50 dark:bg-slate-800 text-wow-500 hover:bg-wow-100 transition-theme btn-glow border border-transparent dark:border-slate-700"><i data-lucide="phone-plus" class="w-5 h-5"></i></button>
+      </header>
+      <div id="calls-list" class="flex-1 overflow-y-auto p-4 space-y-4 pb-32 text-center pt-20 text-muted">
+        <i data-lucide="phone-off" class="w-12 h-12 mx-auto mb-2 opacity-50"></i><p>Sin llamadas recientes</p>
+      </div>
+    </div>
+
+    <!-- BUSCAR -->
+    <div id="tab-people" class="tab-view">
+      <header class="glass sticky top-0 z-20 px-6 py-4 flex flex-col gap-3 transition-theme shadow-sm dark:shadow-none">
+        <h1 class="text-2xl font-bold text-main transition-theme">Buscar</h1>
+        <div class="search-input-container relative w-full">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i data-lucide="search" class="h-5 w-5 text-slate-400"></i></div>
+          <input type="text" id="people-search-input" class="block w-full pl-10 pr-3 py-3 border-none rounded-xl leading-5 bg-slate-100 dark:bg-dark-card text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-wow-500 transition-theme sm:text-sm shadow-inner" style="background-color: var(--bar); color: var(--text-main);" placeholder="Buscar personas o @usuario..." oninput="filterPeople()">
+        </div>
+      </header>
+      <div id="people-grid" class="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4 pb-32 content-start"></div>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="tab-admin" class="tab-view">
+      <header class="glass sticky top-0 z-20 px-6 py-4 flex justify-between items-center transition-theme shadow-sm dark:shadow-none">
+        <h1 class="text-2xl font-bold text-main transition-theme">Administración</h1>
+        <div class="px-3 py-1 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold border border-yellow-200 dark:border-yellow-700/50">Admin Mode</div>
+      </header>
+      <div id="admin-user-list" class="flex-1 overflow-y-auto p-4 space-y-3 pb-32 no-scrollbar"></div>
+    </div>
+
+    <!-- PERFIL -->
+    <div id="tab-profile" class="tab-view overflow-y-auto pb-32 no-scrollbar">
+      <div class="relative h-48 bg-gradient-to-br from-wow-400 to-wow-600 flex justify-end p-5 transition-theme">
+        <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        <div id="profile-admin-banner" class="absolute top-4 left-4 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-wide border border-white/10 hidden"><i data-lucide="shield" class="w-3 h-3 inline-block mr-1 -mt-0.5"></i> Administrador</div>
+        <button onclick="openSettings()" class="relative z-10 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/30 transition h-10 w-10 flex items-center justify-center btn-glow border border-white/20"><i data-lucide="settings" class="w-5 h-5"></i></button>
+      </div>
+      <div class="px-6 -mt-16 relative z-10">
+        <div class="flex justify-between items-end">
+          <img id="profile-view-avatar" src="" class="w-28 h-28 rounded-full border-[5px] border-theme shadow-xl cursor-pointer hover:scale-105 transition-all duration-300" style="border-color: var(--panel); background-color: var(--bar);" onclick="changeAvatar()">
+          <button onclick="editProfile()" class="mb-2 mt-4 px-5 py-2 bg-bar text-main rounded-full text-xs font-bold hover:brightness-95 transition-theme shadow-sm border border-theme active:scale-95" style="background-color: var(--bar); color: var(--text-main);">Editar</button>
+        </div>
+        <div class="mt-3">
+          <div class="flex items-center gap-2">
+            <h2 id="profile-name" class="text-2xl font-extrabold text-main tracking-tight transition-theme"></h2>
+            <div id="profile-admin-badge" class="hidden w-6 h-6 rounded-full admin-badge flex items-center justify-center" title="Administrador"><i data-lucide="shield-check" class="w-3.5 h-3.5 fill-white"></i></div>
+          </div>
+          <p id="profile-username" class="text-wow-500 font-semibold text-base transition-theme"></p>
+          <p id="profile-bio" class="mt-2 text-muted leading-snug text-[14px] transition-theme"></p>
+        </div>
+        <div class="mt-6 space-y-2">
+          <div class="flex items-center gap-3 p-3.5 bg-white/50 dark:bg-dark-card/50 hover:bg-white dark:hover:bg-dark-card rounded-2xl cursor-pointer transition-theme group border border-theme backdrop-blur-sm" style="border-color: var(--border);" onclick="openSettings()">
+            <div class="bg-purple-50 dark:bg-slate-800 p-2 rounded-xl text-purple-500 group-hover:bg-purple-100 dark:group-hover:bg-slate-700 transition-theme"><i data-lucide="palette" class="w-5 h-5"></i></div>
+            <span class="font-semibold text-sm text-main transition-theme">Apariencia y Tema</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 ml-auto text-muted"></i>
+          </div>
+          <div class="flex items-center gap-3 p-3.5 bg-white/50 dark:bg-dark-card/50 hover:bg-white dark:hover:bg-dark-card rounded-2xl cursor-pointer transition-theme group border border-theme" style="border-color: var(--border);">
+            <div class="bg-blue-50 dark:bg-slate-800 p-2 rounded-xl text-blue-500 group-hover:bg-blue-100 dark:group-hover:bg-slate-700 transition-theme"><i data-lucide="bookmark" class="w-5 h-5"></i></div>
+            <span class="font-semibold text-sm text-main transition-theme">Mensajes Guardados</span>
+            <i data-lucide="chevron-right" class="w-4 h-4 ml-auto text-muted"></i>
+          </div>
+          <div class="flex items-center gap-3 p-3.5 bg-white/50 dark:bg-dark-card/50 hover:bg-red-50 dark:hover:bg-red-900/10 rounded-2xl cursor-pointer transition-theme group border border-theme mt-4" style="border-color: var(--border);" onclick="logout()">
+            <div class="bg-red-50 dark:bg-red-900/20 p-2 rounded-xl text-red-500 group-hover:bg-red-100 dark:group-hover:bg-red-900/30 transition-theme"><i data-lucide="log-out" class="w-5 h-5"></i></div>
+            <span class="font-semibold text-sm text-red-500">Cerrar Sesión</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BARRA INFERIOR -->
+    <nav class="glass absolute bottom-0 w-full px-6 py-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex justify-around items-center z-30 border-t border-theme backdrop-blur-xl transition-theme" style="border-color: var(--border);">
+      <button onclick="switchTab('chats')" class="nav-btn active group relative flex flex-col items-center justify-center w-12 h-12" data-target="chats"><i data-lucide="message-circle" class="w-7 h-7 text-muted group-[.active]:text-wow-500 transition-all duration-300 group-[.active]:-translate-y-1"></i><div class="nav-indicator"></div><div class="nav-spotlight"></div></button>
+      <button onclick="switchTab('stories')" class="nav-btn group relative flex flex-col items-center justify-center w-12 h-12" data-target="stories"><i data-lucide="video" class="w-7 h-7 text-muted group-[.active]:text-wow-500 transition-all duration-300 group-[.active]:-translate-y-1"></i><div class="nav-indicator"></div><div class="nav-spotlight"></div></button>
+      <button onclick="switchTab('calls')" class="nav-btn group relative flex flex-col items-center justify-center w-12 h-12" data-target="calls"><i data-lucide="phone" class="w-7 h-7 text-muted group-[.active]:text-wow-500 transition-all duration-300 group-[.active]:-translate-y-1"></i><div class="nav-indicator"></div><div class="nav-spotlight"></div></button>
+      <button onclick="switchTab('people')" class="nav-btn group relative flex flex-col items-center justify-center w-12 h-12" data-target="people"><i data-lucide="search" class="w-7 h-7 text-muted group-[.active]:text-wow-500 transition-all duration-300 group-[.active]:-translate-y-1"></i><div class="nav-indicator"></div><div class="nav-spotlight"></div></button>
+      <button id="nav-btn-admin" onclick="switchTab('admin')" class="nav-btn group relative flex flex-col items-center justify-center w-12 h-12 hidden" data-target="admin"><i data-lucide="shield" class="w-7 h-7 text-muted group-[.active]:text-yellow-500 transition-all duration-300 group-[.active]:-translate-y-1"></i><div class="nav-indicator !bg-yellow-500"></div><div class="nav-spotlight"></div></button>
+      <button onclick="switchTab('profile')" class="nav-btn group relative flex flex-col items-center justify-center w-12 h-12" data-target="profile"><img id="nav-avatar" src="" class="w-7 h-7 rounded-full border border-slate-300 dark:border-slate-600 group-[.active]:border-wow-500 transition-all duration-300 group-[.active]:-translate-y-1"><div class="nav-indicator"></div><div class="nav-spotlight"></div></button>
+    </nav>
+
+    <!-- VIEW: CHAT -->
+    <div id="view-chat" class="flex flex-col h-full w-full absolute inset-0 z-50 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] translate-x-full" style="background-color: var(--bg);">
+      <header class="glass sticky top-0 z-20 px-3 py-3 flex justify-between items-center shadow-sm bg-bar/95 transition-theme">
+        <div class="flex items-center gap-1">
+          <button onclick="closeChat()" class="p-2 -ml-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 transition-theme active:scale-95 text-muted flex items-center justify-center group w-10 h-10"><i data-lucide="arrow-left" class="w-6 h-6 group-hover:-translate-x-0.5 transition-transform"></i></button>
+          <div class="flex items-center gap-3 cursor-pointer py-1 px-2 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-theme" onclick="viewOtherProfileFromChat()">
+            <div class="relative">
+              <img id="chat-header-img" src="" class="w-10 h-10 rounded-full border border-border bg-slate-200 object-cover transition-theme">
+              <div id="chat-header-presence-dot" class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-slate-400 border-2 border-theme rounded-full transition-theme" style="border-color: var(--bar);"></div>
+            </div>
+            <div class="flex flex-col justify-center">
+              <h2 id="chat-header-name" class="text-sm font-bold text-main leading-tight transition-theme"></h2>
+              <span id="chat-header-status" class="text-[11px] text-slate-500 font-semibold mt-0.5">Desconectado</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- CALL BUTTONS & DELETE -->
+        <div class="flex items-center gap-1">
+            <button id="chat-video-btn" onclick="startCall('video')" class="p-2 rounded-full text-wow-500 hover:bg-wow-50 dark:hover:bg-wow-900/20 transition-theme"><i data-lucide="video" class="w-5 h-5"></i></button>
+            <button id="chat-call-btn" onclick="startCall('audio')" class="p-2 rounded-full text-wow-500 hover:bg-wow-50 dark:hover:bg-wow-900/20 transition-theme"><i data-lucide="phone" class="w-5 h-5"></i></button>
+            <!-- ADMIN DELETE CHAT -->
+            <button id="chat-delete-btn" onclick="promptDeleteChat()" class="hidden p-2 rounded-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-theme"><i data-lucide="trash-2" class="w-5 h-5"></i></button>
+        </div>
+      </header>
+
+      <div id="messages-container" class="flex-1 overflow-y-auto p-4 space-y-1 bg-pattern-diagonal transition-theme"></div>
+
+      <div class="flex flex-col z-20 transition-theme" style="background-color: var(--bar); border-top: 1px solid var(--border);">
+          <!-- REPLY PREVIEW -->
+          <div id="reply-preview" class="hidden px-3 pt-3 pb-1 border-b border-theme/50 flex items-center justify-between animate-fade-in">
+              <div class="flex flex-col bg-slate-100 dark:bg-slate-800/50 rounded-lg p-2 border-l-4 border-wow-500 w-full relative">
+                  <span class="text-xs font-bold text-wow-500 mb-0.5">Respondiendo a <span id="reply-preview-name">Usuario</span></span>
+                  <span id="reply-preview-text" class="text-xs text-muted truncate pr-6">Texto del mensaje...</span>
+                  <button onclick="cancelReplyMode()" class="absolute top-1 right-1 p-1 text-muted hover:text-red-500"><i data-lucide="x" class="w-4 h-4"></i></button>
+              </div>
+          </div>
+
+          <div class="p-3 flex items-end gap-2 pb-6 pr-3">
+            <button id="plus-btn" onclick="openImagePicker()" class="p-3 mb-0.5 rounded-full bg-wow-500 text-white shadow-lg shadow-wow-500/20 active:scale-95 shrink-0 flex items-center justify-center h-[46px] w-[46px] transition-theme"><i data-lucide="plus" class="w-6 h-6"></i></button>
+            <input type="file" id="chat-image-input" class="hidden" accept="image/*" onchange="handleChatImage(this)">
+
+            <!-- PREVIEW IMAGEN -->
+            <div id="image-preview" class="hidden flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-[24px] flex items-center justify-between px-3 py-1 min-h-[46px] border border-transparent border-wow-500 transition-theme shadow-inner">
+               <div class="flex items-center gap-3 overflow-hidden">
+                   <img id="preview-thumb" src="" class="h-8 w-8 rounded-lg object-cover bg-slate-300">
+                   <span class="text-xs text-muted truncate">Imagen seleccionada</span>
+               </div>
+               <button onclick="cancelImagePreview()" class="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-600 text-muted"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+
+            <!-- VOICE RECORDER BAR -->
+            <div id="voice-recorder" class="hidden flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-[24px] flex items-center justify-between px-3 py-2 min-h-[46px] border border-transparent border-red-400/60 transition-theme shadow-inner">
+              <div class="flex items-center gap-2 overflow-hidden min-w-0">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0"></span>
+                <span id="rec-timer" class="text-xs font-extrabold text-main tabular-nums">0:00</span>
+                <span class="text-xs text-muted truncate">Grabando...</span>
+              </div>
+              <div class="flex items-center gap-2 shrink-0">
+                <button onclick="cancelVoiceRecording()" class="px-3 py-2 rounded-full bg-slate-200/70 dark:bg-slate-600/60 text-main text-[11px] font-extrabold hover:brightness-95 transition-theme">Cancelar</button>
+                <button onclick="finishVoiceRecording()" class="px-3 py-2 rounded-full bg-wow-500 text-white text-[11px] font-extrabold shadow-md shadow-wow-500/20 hover:bg-wow-600 transition-theme">Enviar</button>
+              </div>
+            </div>
+
+            <div id="text-input-container" class="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-[24px] flex items-end px-2 py-2 min-h-[46px] border border-transparent focus-within:border-wow-300 dark:focus-within:border-wow-800 transition-theme shadow-inner dark:shadow-none overflow-hidden">
+              <textarea id="message-input" rows="1" placeholder="Mensaje" class="flex-1 bg-transparent border-none outline-none text-main text-[16px] resize-none max-h-24 py-1 px-2 placeholder-slate-400 min-w-0 mb-0.5"></textarea>
+            </div>
+
+            <button id="send-btn" onclick="handleSendButton()" class="group relative p-3 mb-0.5 rounded-full bg-wow-500 text-white transition-all duration-300 shadow-lg shadow-wow-500/30 hover:shadow-wow-500/40 hover:scale-105 active:scale-95 flex items-center justify-center w-[46px] h-[46px] shrink-0 overflow-hidden">
+              <i id="icon-mic" data-lucide="mic" class="w-5 h-5 absolute transition-all duration-300 scale-100 rotate-0"></i>
+              <i id="icon-send" data-lucide="send" class="w-5 h-5 absolute transition-all duration-300 scale-0 rotate-90 opacity-0 translate-x-4"></i>
+            </button>
+          </div>
+      </div>
+    </div>
+
+    <!-- VIEW: CALL OVERLAY (Nuevo) -->
+    <div id="view-call-overlay" class="hidden absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center call-overlay">
+        <!-- Remote Video -->
+        <video id="remoteVideo" autoplay playsinline class="remote-video"></video>
+        
+        <!-- Local Video (PiP) -->
+        <video id="localVideo" autoplay playsinline muted class="local-video"></video>
+        
+        <!-- Status Info / Avatar (for audio calls) -->
+        <div id="call-status-ui" class="absolute top-20 flex flex-col items-center text-white z-20">
+             <img id="call-avatar" src="" class="w-24 h-24 rounded-full border-4 border-white/20 mb-4 shadow-xl">
+             <h3 id="call-name" class="text-2xl font-bold text-shadow">Usuario</h3>
+             <p id="call-status-text" class="text-sm font-medium opacity-80 animate-pulse">Conectando...</p>
+        </div>
+
+        <!-- Call Controls -->
+        <div class="call-controls absolute bottom-12 flex items-center gap-6 z-30">
+             <!-- MUTE BUTTON -->
+             <button id="call-mute-btn" onclick="toggleMute()" class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all">
+                <i id="call-mute-icon" data-lucide="mic" class="w-6 h-6"></i>
+             </button>
+             
+             <!-- HANGUP BUTTON -->
+             <button onclick="endCall()" class="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-white shadow-lg shadow-red-500/40 hover:scale-105 transition-all">
+                <i data-lucide="phone-off" class="w-8 h-8"></i>
+             </button>
+
+             <!-- CAM TOGGLE (Optional/Future) -->
+             <button id="call-video-toggle" onclick="toggleVideo()" class="w-14 h-14 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all">
+                 <i id="call-video-icon" data-lucide="video" class="w-6 h-6"></i>
+             </button>
+        </div>
+    </div>
+
+    <!-- MODAL AJUSTES -->
+    <div id="view-settings" class="hidden absolute inset-0 z-[60] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center opacity-0 transition-opacity duration-300">
+      <div class="bg-bar w-full sm:w-[90%] sm:rounded-[32px] rounded-t-[32px] p-6 shadow-2xl transform translate-y-full transition-transform duration-500 cubic-bezier(0.32,0.72,0,1) max-h-[90vh] overflow-y-auto" id="settings-panel" style="background-color: var(--bar); color: var(--text-main);">
+        <div class="flex justify-center mb-4 sm:hidden"><div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div></div>
+        <div class="flex justify-between items-center mb-8">
+          <h2 class="text-2xl font-bold text-main tracking-tight transition-theme">Ajustes</h2>
+          <button onclick="closeSettings()" class="p-2 bg-slate-100 dark:bg-slate-700 rounded-full text-muted hover:bg-slate-200 dark:hover:bg-slate-600 transition-theme"><i data-lucide="x" class="w-6 h-6"></i></button>
+        </div>
+
+        <div class="flex items-center justify-between mb-6 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-theme transition-theme" style="border-color: var(--border);">
+          <div class="flex items-center gap-4">
+            <div class="p-3 bg-white dark:bg-slate-700 rounded-2xl shadow-sm text-wow-500 transition-theme"><i data-lucide="moon" class="w-6 h-6"></i></div>
+            <div><p class="font-bold text-main text-lg transition-theme">Modo Oscuro</p><p class="text-sm text-muted transition-theme">Interfaz nocturna</p></div>
+          </div>
+          <div class="toggle-switch" id="dark-mode-switch" onclick="toggleDarkModeUI()"><div class="toggle-knob"></div></div>
+        </div>
+
+        <div class="mb-10">
+          <p class="text-xs font-bold text-muted mb-4 uppercase tracking-wider pl-1">Color de Acento</p>
+          <div class="flex justify-between gap-3 p-1">
+            <button onclick="setTheme('default')" class="w-14 h-14 rounded-full bg-[#0ea5e9] border-[4px] border-white dark:border-dark-bg ring-2 ring-transparent focus:ring-[#0ea5e9] hover:scale-110 transition shadow-lg shadow-sky-500/30 transition-theme"></button>
+            <button onclick="setTheme('purple')" class="w-14 h-14 rounded-full bg-[#a855f7] border-[4px] border-white dark:border-dark-bg ring-2 ring-transparent focus:ring-[#a855f7] hover:scale-110 transition shadow-lg shadow-purple-500/30 transition-theme"></button>
+            <button onclick="setTheme('emerald')" class="w-14 h-14 rounded-full bg-[#10b981] border-[4px] border-white dark:border-dark-bg ring-2 ring-transparent focus:ring-[#10b981] hover:scale-110 transition shadow-lg shadow-emerald-500/30 transition-theme"></button>
+            <button onclick="setTheme('rose')" class="w-14 h-14 rounded-full bg-[#f43f5e] border-[4px] border-white dark:border-dark-bg ring-2 ring-transparent focus:ring-[#f43f5e] hover:scale-110 transition shadow-lg shadow-rose-500/30 transition-theme"></button>
+          </div>
+        </div>
+
+        <div class="mb-8">
+            <p class="text-xs font-bold text-muted mb-4 uppercase tracking-wider pl-1">Seguridad</p>
+            <button onclick="openChangePassword()" class="w-full p-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl flex justify-between items-center text-main hover:bg-slate-200 dark:hover:bg-slate-700 transition-theme group">
+                <span class="font-medium">Cambiar Contraseña</span>
+                <i data-lucide="lock" class="w-5 h-5 text-muted group-hover:text-wow-500 transition-colors"></i>
+            </button>
+        </div>
+
+        <button onclick="closeSettings()" class="w-full py-4 bg-wow-500 hover:bg-wow-600 text-white font-bold rounded-2xl shadow-xl shadow-wow-500/30 active:scale-95 transition-all text-lg flex items-center justify-center gap-2"><span>Listo</span><i data-lucide="check" class="w-5 h-5"></i></button>
+      </div>
+    </div>
+
+    <!-- CAMBIAR CONTRASEÑA -->
+    <div id="view-change-password" class="hidden absolute inset-0 z-[80] flex flex-col animate-fade-in transition-theme" style="background-color: var(--bar); color: var(--text-main);">
+        <header class="px-6 py-4 flex items-center justify-between border-b border-theme transition-theme" style="border-color: var(--border);">
+            <button onclick="closeChangePassword()" class="text-muted font-medium px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-theme">Cancelar</button>
+            <span class="font-bold text-main text-lg transition-theme">Seguridad</span>
+            <div class="w-10"></div>
+        </header>
+        <div class="p-8 w-full flex-1 flex flex-col justify-center max-w-md mx-auto">
+            <div id="cp-step-1" class="space-y-6 transition-all duration-300">
+                <div class="text-center mb-6"><div class="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4 text-wow-500"><i data-lucide="lock" class="w-8 h-8"></i></div><h3 class="text-xl font-bold text-main">Confirma tu identidad</h3><p class="text-muted text-sm mt-2">Introduce tu contraseña actual para continuar.</p></div>
+                <input type="password" id="current-pass-input" placeholder="Contraseña actual" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-dark-card border border-transparent focus:border-wow-500 outline-none text-main transition-theme font-medium text-lg shadow-sm" style="background-color: var(--bg);">
+                <button onclick="verifyCurrentPassword()" class="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold rounded-xl active:scale-95 transition-all text-base shadow-lg">Continuar</button>
+                <p id="cp-error-1" class="text-red-500 text-sm font-bold text-center h-5"></p>
+            </div>
+            <div id="cp-step-2" class="space-y-6 hidden opacity-0 transition-all duration-300 translate-x-10">
+                <div class="text-center mb-6"><div class="w-16 h-16 bg-wow-100 dark:bg-wow-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-wow-500"><i data-lucide="key" class="w-8 h-8"></i></div><h3 class="text-xl font-bold text-main">Nueva contraseña</h3><p class="text-muted text-sm mt-2">Crea una contraseña segura que recuerdes.</p></div>
+                <input type="password" id="new-pass-input" placeholder="Nueva contraseña" class="w-full p-4 rounded-2xl bg-slate-50 dark:bg-dark-card border border-transparent focus:border-wow-500 outline-none text-main transition-theme font-medium text-lg shadow-sm" style="background-color: var(--bg);">
+                <button onclick="doChangePassword()" class="w-full py-3.5 bg-wow-500 hover:bg-wow-600 text-white font-bold rounded-xl active:scale-95 transition-all text-base shadow-lg shadow-wow-500/30">Cambiar Contraseña</button>
+            </div>
+            <div id="cp-success" class="hidden w-full flex-col items-center justify-center text-center animate-pop">
+                    <div class="w-full flex justify-center mb-6"><div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-500"><i data-lucide="check" class="w-10 h-10 stroke-[3]"></i></div></div>
+                <h3 class="text-2xl font-bold text-main">¡Actualizado!</h3><p class="text-muted mt-2">Tu contraseña se ha cambiado correctamente.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDITAR PERFIL -->
+    <div id="view-edit-profile" class="hidden absolute inset-0 z-50 bg-bar flex flex-col animate-fade-in transition-theme" style="background-color: var(--bar); color: var(--text-main);">
+      <header class="px-6 py-4 flex items-center justify-between border-b border-theme transition-theme" style="border-color: var(--border);">
+        <button onclick="closeEditProfile()" class="text-muted font-medium px-3 py-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-700 transition-theme">Cancelar</button>
+        <span class="font-bold text-main text-lg transition-theme">Editar Perfil</span>
+        <button onclick="saveProfile()" class="text-wow-600 dark:text-wow-400 font-bold px-3 py-1.5 rounded-xl hover:bg-wow-50 dark:hover:bg-slate-800 transition-theme">Guardar</button>
+      </header>
+      <div class="p-8 flex flex-col items-center flex-1 overflow-y-auto">
+        <div class="relative mb-10 group cursor-pointer" onclick="changeAvatar()">
+          <div class="w-32 h-32 mx-auto relative rounded-full overflow-hidden border-4 border-slate-100 dark:border-slate-800 shadow-2xl transition-theme">
+            <img id="edit-avatar-img" src="" class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition backdrop-blur-sm"><i data-lucide="camera" class="text-white w-8 h-8"></i></div>
+          </div>
+          <span class="text-xs text-wow-500 mt-3 block text-center font-bold uppercase tracking-wide">Toca para cambiar</span>
+          <input type="file" id="avatar-upload" class="hidden" accept="image/*" onchange="handleAvatarFile(this)">
+        </div>
+        <div class="w-full space-y-6">
+          <div class="group"><label class="block text-xs font-bold text-muted uppercase mb-2 ml-1">Nombre</label><input type="text" id="edit-name-input" class="w-full bg-slate-50 dark:bg-dark-card p-4 rounded-2xl border border-transparent focus:border-wow-500 focus:bg-bar outline-none text-main transition-theme font-medium text-lg shadow-sm"></div>
+          <div class="group"><label class="block text-xs font-bold text-muted uppercase mb-2 ml-1">Usuario</label><div class="relative"><span class="absolute left-4 top-4 text-muted text-lg">@</span><input type="text" id="edit-username-input" class="w-full bg-slate-50 dark:bg-dark-card p-4 pl-9 rounded-2xl border border-transparent focus:border-wow-500 focus:bg-bar outline-none text-main transition-theme font-medium text-lg shadow-sm"></div></div>
+          <div class="group"><label class="block text-xs font-bold text-muted uppercase mb-2 ml-1">Biografía</label><textarea id="edit-bio-input" rows="3" class="w-full bg-slate-50 dark:bg-dark-card p-4 rounded-2xl border border-transparent focus:border-wow-500 focus:bg-bar outline-none text-main transition-theme font-medium text-base resize-none shadow-sm"></textarea></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VER OTRO PERFIL -->
+    <div id="view-other-profile" class="hidden absolute inset-0 z-[70] bg-bar flex flex-col animate-fade-in transition-theme" style="background-color: var(--bar); color: var(--text-main);">
+        <div class="relative h-48 bg-gradient-to-br from-wow-400 to-wow-600 flex justify-between p-5 transition-theme">
+            <button onclick="closeOtherProfile()" class="relative z-10 bg-white/20 backdrop-blur-md p-2 rounded-full text-white hover:bg-white/30 transition h-10 w-10 flex items-center justify-center btn-glow"><i data-lucide="arrow-left" class="w-5 h-5"></i></button>
+        </div>
+        <div class="px-6 -mt-16 relative z-10 flex-1 overflow-y-auto">
+            <img id="other-profile-avatar" src="" class="w-28 h-28 rounded-full border-[5px] border-theme shadow-xl transition-all duration-300" style="border-color: var(--bar); background-color: var(--bar);">
+            <div class="mt-3 animate-slide-up-subtle">
+                <div class="flex items-center gap-2">
+                    <h2 id="other-profile-name" class="text-2xl font-extrabold text-main tracking-tight transition-theme"></h2>
+                    <div id="other-profile-admin-badge" class="hidden w-6 h-6 rounded-full admin-badge flex items-center justify-center" title="Administrador"><i data-lucide="shield-check" class="w-3.5 h-3.5 fill-white"></i></div>
+                </div>
+                <p id="other-profile-username" class="text-wow-500 font-semibold text-base transition-theme"></p>
+                <p id="other-profile-bio" class="mt-2 text-muted leading-snug text-[14px] transition-theme"></p>
+            </div>
+            <div class="mt-6 space-y-3 animate-slide-up-subtle stagger-1">
+                <div class="p-4 bg-slate-50 dark:bg-dark-card/50 rounded-2xl border border-theme" style="border-color: var(--border);">
+                    <span class="block text-xs font-bold text-muted uppercase tracking-wider mb-1">Estado</span>
+                    <span class="text-main font-medium">Usando wow</span>
+                </div>
+            </div>
+            <div id="other-profile-admin-banner" class="absolute top-4 left-4 bg-black/20 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-[10px] font-bold uppercase tracking-wide border border-white/10 hidden"><i data-lucide="shield" class="w-3 h-3 inline-block mr-1 -mt-0.5"></i> Administrador</div>
+        </div>
+    </div>
+
+    <!-- CROP AVATAR -->
+    <div id="view-crop-avatar" class="hidden absolute inset-0 z-[90] bg-black flex flex-col items-center justify-center animate-fade-in">
+        <div class="absolute top-4 right-4 z-10"><button onclick="closeCropAvatar()" class="text-white bg-white/20 p-2 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+        <h3 class="text-white font-bold text-lg mb-4 absolute top-8">Ajusta tu foto</h3>
+        <div class="relative w-full max-w-sm aspect-square bg-black overflow-hidden flex items-center justify-center" id="crop-container">
+             <canvas id="crop-canvas"></canvas>
+             <div class="absolute inset-0 border-[4px] border-white/80 rounded-full pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.7)]"></div>
+        </div>
+         <div class="w-full max-w-xs mt-8 px-6 space-y-6">
+             <button onclick="saveCroppedAvatar()" class="w-full py-3.5 bg-wow-500 hover:bg-wow-600 text-white font-bold rounded-xl shadow-lg">Listo</button>
+        </div>
+    </div>
+
+    <!-- CREATE STORY -->
+    <div id="view-story-create" class="hidden absolute inset-0 z-[90] bg-black flex flex-col animate-fade-in">
+         <div class="absolute top-4 right-4 z-10"><button onclick="closeCreateStory()" class="text-white bg-white/20 p-2 rounded-full"><i data-lucide="x" class="w-6 h-6"></i></button></div>
+         <div class="flex-1 flex flex-col items-center justify-center p-6 text-center" id="story-upload-zone">
+             <i data-lucide="image-plus" class="w-16 h-16 text-white mb-4 opacity-70"></i>
+             <h3 class="text-white font-bold text-xl mb-2">Nueva Historia</h3>
+             <button onclick="document.getElementById('story-file-input').click()" class="bg-wow-500 text-white font-bold py-3 px-8 rounded-full shadow-lg">Elegir Imagen</button>
+             <input type="file" id="story-file-input" class="hidden" accept="image/*" onchange="handleStoryFile(this)">
+         </div>
+         <div id="story-preview-zone" class="hidden flex-1 relative bg-black">
+             <img id="story-preview-img" class="w-full h-full object-contain">
+             <div class="absolute bottom-0 w-full p-4 bg-gradient-to-t from-black/80 to-transparent">
+                 <input type="text" id="story-caption" placeholder="Añade un comentario..." class="w-full bg-white/20 text-white placeholder-white/70 p-3 rounded-xl border border-white/10 outline-none backdrop-blur-sm">
+             </div>
+         </div>
+         <div id="story-actions" class="p-6 bg-black hidden">
+             <button onclick="uploadStory()" class="w-full py-4 bg-wow-500 text-white font-bold rounded-2xl shadow-lg hover:bg-wow-600 transition">Subir Historia</button>
+         </div>
+    </div>
+
+    <!-- CONFIRM DELETE USER MODAL -->
+    <div id="view-delete-confirm" class="hidden absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-bar w-[85%] max-w-sm rounded-[32px] p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="delete-panel" style="background-color: var(--bar); color: var(--text-main);">
+             <div class="text-center mb-6">
+                 <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600"><i data-lucide="alert-triangle" class="w-8 h-8"></i></div>
+                 <h3 class="text-xl font-bold text-main">¿Estás seguro?</h3>
+                 <p class="text-muted text-sm mt-2">Esta acción borrará permanentemente la cuenta del usuario. No se puede deshacer.</p>
+             </div>
+             <div class="flex gap-3">
+                 <button onclick="closeDeleteModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-main font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-theme">Cancelar</button>
+                 <button onclick="doDeleteUser()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/20 transition-theme">Borrar</button>
+             </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE CHAT MODAL -->
+    <div id="view-delete-chat-confirm" class="hidden absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center opacity-0 transition-opacity duration-300">
+        <div class="bg-bar w-[85%] max-w-sm rounded-[32px] p-6 shadow-2xl transform scale-95 transition-transform duration-300" id="delete-chat-panel" style="background-color: var(--bar); color: var(--text-main);">
+             <div class="text-center mb-6">
+                 <div class="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-red-600"><i data-lucide="trash-2" class="w-8 h-8"></i></div>
+                 <h3 class="text-xl font-bold text-main">Borrar Chat</h3>
+                 <p class="text-muted text-sm mt-2">Esta acción eliminará este chat para ambos usuarios permanentemente.</p>
+             </div>
+             <div class="flex gap-3">
+                 <button onclick="closeDeleteChatModal()" class="flex-1 py-3 bg-slate-100 dark:bg-slate-700 text-main font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-600 transition-theme">Cancelar</button>
+                 <button onclick="doDeleteChat()" class="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 shadow-lg shadow-red-500/20 transition-theme">Borrar</button>
+             </div>
+        </div>
+    </div>
+
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="./assets/app.js"></script>
+</body>
+</html>
