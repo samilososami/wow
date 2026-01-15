@@ -12,6 +12,14 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
+@app.get("/")
+def read_root():
+    return {"message": "Hello World from FastAPI on Vercel!"}
+
+@app.get("/api/health")
+def health_check():
+    return {"status": "healthy"}
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -789,3 +797,8 @@ async def serve_static(path: str):
 
     # SPA Fallback -> index.html
     return FileResponse(os.path.join(PUBLIC_DIR, "index.html"))
+
+# Importante para ejecución local (no afecta a Vercel)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
