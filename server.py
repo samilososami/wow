@@ -12,10 +12,6 @@ from pydantic import BaseModel
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "Hello World from FastAPI on Vercel!"}
-
 @app.get("/api/health")
 def health_check():
     return {"status": "healthy"}
